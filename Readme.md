@@ -198,7 +198,7 @@ This project uses Jest and Supertest for testing.
 
 A Postman collection is available to test the API endpoints. You can import the collection using the link below:
 
-[Download Postman Collection](./chat_app_postman_collection.json)
+[Download Postman Collection](./Chat App API.postman_collection.json)
 
 ## Error Handling
 
