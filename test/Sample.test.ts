@@ -1,10 +1,10 @@
 import request from "supertest";
 import mongoose from "mongoose";
 import app from "../src/app";
-import { createUser, loginUser } from "./utils";
+import { createUser, loginUser, registerUser } from "./utils";
 
 beforeAll(async () => {
-  await mongoose.connect(process.env.MONGO_URI || "");
+  await mongoose.connect(process.env.MONGO_URI || "", {});
   // await mongoose.connection.db.dropDatabase();
 });
 
@@ -21,9 +21,9 @@ describe("API Tests", () => {
   let messageId: string;
 
   beforeAll(async () => {
-    await createUser("adminuser", "password123", "admin");
-    await createUser("normaluser", "password123", "user");
+    await registerUser("adminuser", "password123", "admin");
     adminToken = await loginUser("adminuser", "password123");
+    await createUser(adminToken, "normaluser", "password123", "user");
     userToken = await loginUser("normaluser", "password123");
   });
 
@@ -47,6 +47,7 @@ describe("API Tests", () => {
       role: expect.any(String),
       _id: expect.any(String),
     };
+
     it("should create a new user by admin", async () => {
       const response = await request(app)
         .post("/api/users")
@@ -63,8 +64,6 @@ describe("API Tests", () => {
     });
 
     it("should edit an existing user by admin", async () => {
-      // const users = await request(app).get("/api/users").set("Authorization", `Bearer ${adminToken}`);
-
       const response = await request(app)
         .put(`/api/users/${userId}`)
         .send({
@@ -88,28 +87,29 @@ describe("API Tests", () => {
         .set("Authorization", `Bearer ${userToken}`);
       expect(response.status).toBe(201);
       expect(response.body.message).toBe("Group created successfully.");
+      // groupId = response.body.data._id;
     });
 
-    it("should search for a group by name", async () => {
+    it("should search for a group by name and return member count", async () => {
       const response = await request(app)
         .get("/api/groups")
         .query({
-          name: "",
+          name: "Test Group",
         })
         .set("Authorization", `Bearer ${userToken}`);
       expect(response.status).toBe(200);
       expect(response.body).toBeInstanceOf(Array);
       expect(response.body.length).toBeGreaterThan(0);
+      expect(response.body[0]).toHaveProperty("memberCount");
       groupId = response.body[0]._id;
-      console.log(groupId);
     });
 
-    it("should add a member to a group", async () => {
+    it("should add a member to a group by username", async () => {
       const response = await request(app)
         .post("/api/groups/add-member")
         .send({
           groupId,
-          userId,
+          userName: "updateduser",
         })
         .set("Authorization", `Bearer ${userToken}`);
       expect(response.status).toBe(200);
@@ -125,7 +125,7 @@ describe("API Tests", () => {
 
   describe("Messaging", () => {
     beforeAll(async () => {
-      const groupResponse = await request(app)
+      await request(app)
         .post("/api/groups")
         .send({
           name: "Messaging Group",
@@ -136,12 +136,12 @@ describe("API Tests", () => {
       const response = await request(app)
         .get("/api/groups")
         .query({
-          name: "",
+          name: "Messaging",
         })
         .set("Authorization", `Bearer ${userToken}`);
       expect(response.status).toBe(200);
       expect(response.body).toBeInstanceOf(Array);
-      expect(response.body.length).toBeGreaterThan(0);
+      expect(response.body[0]).toHaveProperty("memberCount");
       groupId = response.body[0]._id;
     });
 
@@ -150,6 +150,7 @@ describe("API Tests", () => {
         .post("/api/groups/send-message")
         .send({
           groupId,
+          senderId: userId,
           content: "Hello, this is a test message!",
         })
         .set("Authorization", `Bearer ${userToken}`);

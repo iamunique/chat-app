@@ -6,5 +6,5 @@ export const createGroupValidator = [
 
 export const addMemberValidator = [
   body('groupId').isMongoId().withMessage('Group ID must be a valid Mongo ID'),
-  body('userId').isString().withMessage('User ID must be a string'),
+  body('userName').isString().withMessage('User Name must be a string'),
 ];

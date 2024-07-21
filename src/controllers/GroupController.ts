@@ -6,8 +6,9 @@ class GroupController {
 
   public createGroup = async (req: Request, res: Response, next: NextFunction): Promise<Response<any, Record<string, any>> | void> => {
     const { name, members } = req.body;
+    const userId = (req as any).user._id;
     try {
-      await this.groupService.createGroup(name, members);
+      await this.groupService.createGroup(userId,  name, members);
       return res.status(201).send({ message: "Group created successfully." });
     } catch (error) {
       return next(error);
@@ -16,8 +17,9 @@ class GroupController {
 
   public deleteGroup = async (req: Request, res: Response, next: NextFunction): Promise<Response<any, Record<string, any>> | void> => {
     const { id } = req.params;
+    const userId = (req as any).user._id;
     try {
-      await this.groupService.deleteGroup(id);
+      await this.groupService.deleteGroup(userId, id);
       return res.send({ message: "Group deleted successfully." });
     } catch (error) {
       return next(error);
@@ -35,9 +37,9 @@ class GroupController {
   };
 
   public addMember = async (req: Request, res: Response, next: NextFunction): Promise<Response<any, Record<string, any>> | void> => {
-    const { groupId, userId } = req.body;
+    const { groupId, userName } = req.body;
     try {
-      await this.groupService.addMember(groupId, userId);
+      await this.groupService.addMember(groupId, userName);
       return res.send({ message: "Member added successfully." });
     } catch (error) {
       return next(error);

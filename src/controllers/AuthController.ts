@@ -1,16 +1,16 @@
-import { Request, Response, NextFunction } from 'express';
-import AuthService from '../services/AuthService';
-import Logger from '../services/Logger';
+import { Request, Response, NextFunction } from "express";
+import AuthService from "../services/AuthService";
+import Logger from "../services/Logger";
 
 class AuthController {
   private authService = new AuthService();
   private logger = Logger.getInstance();
 
   public register = async (req: Request, res: Response, next: NextFunction): Promise<Response<any, Record<string, any>> | void> => {
-    const { username, password, role } = req.body;
+    const { username, password } = req.body;
     try {
-      await this.authService.register(username, password, role);
-      return res.status(201).send({ message: 'User created successfully.' });
+      await this.authService.register(username, password);
+      return res.status(201).send({ message: "User created successfully." });
     } catch (error) {
       return next(error);
     }
@@ -28,8 +28,9 @@ class AuthController {
 
   public logout = (req: Request, res: Response): Response<any, Record<string, any>> | void => {
     const user = (req as any).user;
+    //delete the FCM tokens or other Operations
     this.logger.info(`User logged out: ${user?.username}`);
-    return res.send({ message: 'Logout successful.' });
+    return res.send({ message: "Logout successful." });
   };
 }
 
